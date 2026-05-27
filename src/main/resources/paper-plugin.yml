@@ -1,0 +1,23 @@
+name: CombatReplay
+version: 1.0-SNAPSHOT
+main: com.combatreplay.CombatReplayPlugin
+api-version: '1.21'
+author: Jules
+description: A PvP combat recording and replay plugin.
+commands:
+  creplay:
+    description: Main command for CombatReplay.
+    usage: /creplay
+permissions:
+  creplay.watch:
+    description: Allows watching replays.
+    default: op
+  creplay.list:
+    description: Allows listing replays.
+    default: op
+  creplay.admin:
+    description: Allows administrative actions.
+    default: op
+  creplay.notify:
+    description: Notify when combat is recorded.
+    default: true
