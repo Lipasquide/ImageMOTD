@@ -1,0 +1,15 @@
+/app/src/main/java/com/combatreplay/config/PluginConfig.java
+/app/src/main/java/com/combatreplay/combat/FrameData.java
+/app/src/main/java/com/combatreplay/combat/CombatSession.java
+/app/src/main/java/com/combatreplay/commands/CombatReplayCommand.java
+/app/src/main/java/com/combatreplay/util/MessageUtil.java
+/app/src/main/java/com/combatreplay/CombatReplayPlugin.java
+/app/src/main/java/com/combatreplay/replay/FakeEntityManager.java
+/app/src/main/java/com/combatreplay/replay/ReplayPlayer.java
+/app/src/main/java/com/combatreplay/combat/HitData.java
+/app/src/main/java/com/combatreplay/util/CodeGenerator.java
+/app/src/main/java/com/combatreplay/replay/ReplayManager.java
+/app/src/main/java/com/combatreplay/storage/CleanupTask.java
+/app/src/main/java/com/combatreplay/storage/ReplayIndex.java
+/app/src/main/java/com/combatreplay/combat/CombatTracker.java
+/app/src/main/java/com/combatreplay/storage/ReplayStorage.java

@@ -1,0 +1,21 @@
+combat:
+  inactivity-timeout-seconds: 10
+  min-hits-to-save: 2
+
+storage:
+  retention-days: 7
+  cleanup-interval-hours: 6
+  max-replays-stored: 500
+
+playback:
+  default-speed: 1.0
+  show-damage-indicators: true
+  show-armor-info: true
+  action-bar-progress: true
+
+messages:
+  prefix: "&8[&bCombatReplay&8] "
+  replay-not-found: "&cReplay not found."
+  replay-started: "&aStarting replay..."
+  replay-finished: "&aReplay finished."
+  already-watching: "&cYou are already watching a replay."
