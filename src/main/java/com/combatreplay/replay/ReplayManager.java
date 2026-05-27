@@ -3,6 +3,7 @@ package com.combatreplay.replay;
 import com.combatreplay.CombatReplayPlugin;
 import com.combatreplay.util.MessageUtil;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -49,14 +50,36 @@ public class ReplayManager implements Listener {
 
     private void giveHotbarItems(Player viewer, ReplayPlayer player) {
         viewer.getInventory().clear();
-        viewer.getInventory().setItem(0, createItem(Material.ARROW, "&eGeri Sar (5s)"));
-        viewer.getInventory().setItem(1, createItem(Material.FEATHER, "&bÖnceki Vuruş"));
-        viewer.getInventory().setItem(2, createItem(Material.LIME_DYE, "&aDuraklat / Başlat"));
-        viewer.getInventory().setItem(3, createItem(Material.FEATHER, "&bSonraki Vuruş"));
-        viewer.getInventory().setItem(4, createItem(Material.ARROW, "&eİleri Sar (5s)"));
-        viewer.getInventory().setItem(5, createItem(Material.SUGAR, "&dOynatma Hızı: " + player.getSpeed() + "x"));
-        viewer.getInventory().setItem(6, createItem(Material.BARRIER, "&cÇıkış"));
+        ConfigurationSection section = plugin.getPluginConfig().getHotbarSection();
+
+        viewer.getInventory().setItem(0, createConfigItem(section.getConfigurationSection("rewind")));
+        viewer.getInventory().setItem(1, createConfigItem(section.getConfigurationSection("prev-hit")));
+        viewer.getInventory().setItem(2, createConfigItem(section.getConfigurationSection("play-pause")));
+        viewer.getInventory().setItem(3, createConfigItem(section.getConfigurationSection("next-hit")));
+        viewer.getInventory().setItem(4, createConfigItem(section.getConfigurationSection("forward")));
+
+        ItemStack speedItem = createConfigItem(section.getConfigurationSection("speed"));
+        updateSpeedItem(speedItem, player.getSpeed());
+        viewer.getInventory().setItem(5, speedItem);
+
+        viewer.getInventory().setItem(6, createConfigItem(section.getConfigurationSection("exit")));
         viewer.getInventory().setHeldItemSlot(2);
+    }
+
+    private ItemStack createConfigItem(ConfigurationSection section) {
+        if (section == null) return new ItemStack(Material.BARRIER);
+        Material mat = Material.matchMaterial(section.getString("material", "BARRIER"));
+        if (mat == null) mat = Material.BARRIER;
+        return createItem(mat, section.getString("name", ""));
+    }
+
+    private void updateSpeedItem(ItemStack item, double speed) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            String name = plugin.getPluginConfig().getHotbarSection().getString("speed.name", "");
+            meta.displayName(MessageUtil.parse(name.replace("%speed%", String.valueOf(speed))));
+            item.setItemMeta(meta);
+        }
     }
 
     private ItemStack createItem(Material material, String name) {
@@ -91,7 +114,7 @@ public class ReplayManager implements Listener {
                 else if (speed == 2.0) speed = 0.5;
                 else speed = 1.0;
                 player.setSpeed(speed);
-                event.getItem().editMeta(meta -> meta.displayName(MessageUtil.parse("&dOynatma Hızı: " + player.getSpeed() + "x")));
+                updateSpeedItem(event.getItem(), player.getSpeed());
             }
             case 6 -> stopReplay(event.getPlayer());
         }

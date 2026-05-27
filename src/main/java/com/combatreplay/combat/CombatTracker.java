@@ -3,7 +3,6 @@ package com.combatreplay.combat;
 import com.combatreplay.CombatReplayPlugin;
 import com.combatreplay.util.CodeGenerator;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,7 +11,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +19,7 @@ public class CombatTracker implements Listener {
     private final CombatReplayPlugin plugin;
     private final Map<String, CombatSession> activeSessions = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> pendingAnimations = new ConcurrentHashMap<>();
+    private final Map<String, FrameData.HitEvent> pendingHits = new ConcurrentHashMap<>();
 
     public CombatTracker(CombatReplayPlugin plugin) {
         this.plugin = plugin;
@@ -56,7 +55,9 @@ public class CombatTracker implements Listener {
         FrameData.PlayerState s1 = captureState(p1);
         FrameData.PlayerState s2 = captureState(p2);
 
-        session.getFrames().add(new FrameData(offset, s1, s2, null));
+        FrameData.HitEvent hit = pendingHits.remove(session.getCode());
+
+        session.getFrames().add(new FrameData(offset, s1, s2, hit));
     }
 
     private FrameData.PlayerState captureState(Player p) {
@@ -87,16 +88,12 @@ public class CombatTracker implements Listener {
         });
 
         session.updateLastHit();
-
-        // Add hit event to the last frame or a new frame
-        long offset = System.currentTimeMillis() - session.getStartTime();
-        session.getFrames().add(new FrameData(offset, captureState(attacker), captureState(victim),
-                new FrameData.HitEvent(attacker.getUniqueId().toString(), victim.getUniqueId().toString(), event.getDamage())));
+        pendingHits.put(session.getCode(), new FrameData.HitEvent(attacker.getUniqueId().toString(), victim.getUniqueId().toString(), event.getDamage()));
     }
 
     @EventHandler
     public void onAnimation(PlayerAnimationEvent event) {
-        pendingAnimations.put(event.getPlayer().getUniqueId(), 1); // 1 = Swing
+        pendingAnimations.put(event.getPlayer().getUniqueId(), 1);
     }
 
     @EventHandler
@@ -125,6 +122,7 @@ public class CombatTracker implements Listener {
             session.setDurationMs(System.currentTimeMillis() - session.getStartTime());
             plugin.getStorage().saveSession(session);
         }
+        pendingHits.remove(session.getCode());
     }
 
     private String getSessionKey(UUID u1, UUID u2) {

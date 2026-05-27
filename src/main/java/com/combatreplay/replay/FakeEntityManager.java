@@ -1,10 +1,12 @@
 package com.combatreplay.replay;
 
+import com.combatreplay.util.SkinUtil;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
+import com.github.retrooper.packetevents.protocol.player.TextureProperty;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
@@ -28,18 +30,33 @@ public class FakeEntityManager {
         entityIds.put(uuid.toString(), id);
         entityUuids.put(uuid.toString(), uuid);
 
-        UserProfile profile = new UserProfile(uuid, name);
-        WrapperPlayServerPlayerInfoUpdate.PlayerInfo info = new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
-                profile, true, 0, GameMode.SURVIVAL, null, null);
+        SkinUtil.fetchSkin(uuid.toString()).thenAccept(skin -> {
+            Bukkit.getScheduler().runTask(com.combatreplay.CombatReplayPlugin.getInstance(), () -> {
+                if (!viewer.isOnline()) return;
 
-        WrapperPlayServerPlayerInfoUpdate infoUpdate = new WrapperPlayServerPlayerInfoUpdate(
-                EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER), List.of(info));
+                UserProfile profile = new UserProfile(uuid, name);
+                if (skin != null) {
+                    profile.setTextureProperties(List.of(skin));
+                }
 
-        WrapperPlayServerSpawnPlayer spawn = new WrapperPlayServerSpawnPlayer(
-                id, uuid, new com.github.retrooper.packetevents.protocol.world.Location(new Vector3d(x, y, z), yaw, pitch));
+                WrapperPlayServerPlayerInfoUpdate.PlayerInfo info = new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(
+                        profile, true, 0, GameMode.SURVIVAL, null, null);
 
-        PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, infoUpdate);
-        PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, spawn);
+                WrapperPlayServerPlayerInfoUpdate infoUpdate = new WrapperPlayServerPlayerInfoUpdate(
+                        EnumSet.of(WrapperPlayServerPlayerInfoUpdate.Action.ADD_PLAYER), List.of(info));
+
+                // For 1.21.1, use SpawnEntity with Player type
+                WrapperPlayServerSpawnEntity spawn = new WrapperPlayServerSpawnEntity(
+                        id, uuid, EntityTypes.PLAYER, new com.github.retrooper.packetevents.protocol.world.Location(new Vector3d(x, y, z), yaw, pitch), yaw, 0, null);
+
+                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, infoUpdate);
+                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, spawn);
+
+                // Head rotation
+                WrapperPlayServerEntityHeadLook head = new WrapperPlayServerEntityHeadLook(id, yaw);
+                PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, head);
+            });
+        });
     }
 
     public void teleportEntity(String uuidStr, double x, double y, double z, float yaw, float pitch) {
@@ -74,16 +91,11 @@ public class FakeEntityManager {
 
         PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, spawn);
 
-        // Metadata for invisibility and custom name
         List<EntityData<?>> data = new ArrayList<>();
-        // Invisibility is in bitmask at index 0
-        data.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20));
-        // Custom name
+        data.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20)); // Invisible
         data.add(new EntityData(2, EntityDataTypes.OPTIONAL_COMPONENT, Optional.of(net.kyori.adventure.text.Component.text("§c-" + String.format("%.1f", damage)))));
-        // Custom name visible
-        data.add(new EntityData(3, EntityDataTypes.BOOLEAN, true));
-        // Small armor stand, no base plate, etc. at index 15
-        data.add(new EntityData(15, EntityDataTypes.BYTE, (byte) 0x11));
+        data.add(new EntityData(3, EntityDataTypes.BOOLEAN, true)); // Custom name visible
+        data.add(new EntityData(15, EntityDataTypes.BYTE, (byte) 0x11)); // Small, no plate
 
         WrapperPlayServerEntityMetadata metadata = new WrapperPlayServerEntityMetadata(id, data);
         PacketEvents.getAPI().getPlayerManager().sendPacket(viewer, metadata);

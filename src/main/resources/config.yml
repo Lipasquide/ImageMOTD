@@ -12,6 +12,28 @@ playback:
   show-damage-indicators: true
   show-armor-info: true
   action-bar-progress: true
+  hotbar:
+    rewind:
+      material: ARROW
+      name: "&eGeri Sar (5s)"
+    prev-hit:
+      material: FEATHER
+      name: "&bÖnceki Vuruş"
+    play-pause:
+      material: LIME_DYE
+      name: "&aDuraklat / Başlat"
+    next-hit:
+      material: FEATHER
+      name: "&bSonraki Vuruş"
+    forward:
+      material: ARROW
+      name: "&eİleri Sar (5s)"
+    speed:
+      material: SUGAR
+      name: "&dOynatma Hızı: %speed%x"
+    exit:
+      material: BARRIER
+      name: "&cÇıkış"
 
 messages:
   prefix: "&8[&bCombatReplay&8] "

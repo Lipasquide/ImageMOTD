@@ -1,11 +1,16 @@
 package com.combatreplay.config;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class PluginConfig {
-    private final FileConfiguration config;
+    private FileConfiguration config;
 
     public PluginConfig(FileConfiguration config) {
+        this.config = config;
+    }
+
+    public void reload(FileConfiguration config) {
         this.config = config;
     }
 
@@ -18,4 +23,8 @@ public class PluginConfig {
     public boolean showDamageIndicators() { return config.getBoolean("playback.show-damage-indicators", true); }
     public String getPrefix() { return config.getString("messages.prefix", "&8[&bCombatReplay&8] "); }
     public String getMsg(String path) { return config.getString("messages." + path, ""); }
+
+    public ConfigurationSection getHotbarSection() {
+        return config.getConfigurationSection("playback.hotbar");
+    }
 }

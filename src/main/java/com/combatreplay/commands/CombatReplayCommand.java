@@ -97,7 +97,7 @@ public class CombatReplayCommand implements CommandExecutor {
             return;
         }
         plugin.reloadConfig();
-        // PluginConfig would need an update method or be recreated
+        plugin.getPluginConfig().reload(plugin.getConfig());
         MessageUtil.send(sender, "&aConfiguration reloaded.");
     }
 
